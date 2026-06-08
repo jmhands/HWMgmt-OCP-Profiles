@@ -1,0 +1,313 @@
+{
+  "SchemaDefinition": "RedfishInteroperabilityProfile.v1_6_0",
+  "ProfileName": "OCPNeocloudServiceCore",
+  "ProfileVersion": "0.5.0",
+  "Purpose": "Neocloud service-plane core. Composes the approved OCP base profiles and tightens the service-plane (eventing, audit, security, fleet-scale query) requirements neoclouds need. Intended to be required by domain profiles (GPU, Fabric, Storage, Rack).",
+  "OwningEntity": "Open Compute Project",
+  "ContributedBy": "OCP Scaling AI Clusters at Neoclouds workgroup (DRAFT)",
+  "ContactInfo": "jm@farmgpu.com",
+  "RequiredProfiles": {
+    "OCPServiceBaseline": {
+      "MinVersion": "1.0.0"
+    },
+    "OCPBaselineHardwareManagement": {
+      "MinVersion": "1.1.0"
+    },
+    "OCPServerHardwareManagement": {
+      "MinVersion": "1.0.0"
+    }
+  },
+  "Protocol": {
+    "MinVersion": "1.16",
+    "ExpandQuery": "Recommended",
+    "SelectQuery": "Recommended",
+    "FilterQuery": "Recommended",
+    "ExcerptQuery": "Recommended",
+    "OnlyQuery": "Mandatory",
+    "DeepPATCH": "None",
+    "DeepPOST": "None"
+  },
+  "Resources": {
+    "ServiceRoot": {
+      "ReadRequirement": "Mandatory",
+      "PropertyRequirements": {
+        "EventService": {
+          "ReadRequirement": "Mandatory"
+        },
+        "CertificateService": {
+          "ReadRequirement": "Mandatory"
+        },
+        "SessionService": {
+          "ReadRequirement": "Mandatory"
+        },
+        "UpdateService": {
+          "ReadRequirement": "Mandatory"
+        },
+        "TelemetryService": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "License/platform-gated on several OEMs (HPE telemetry is Intel-only; Dell needs a Datacenter license). Required at Neocloud-Trusted; conditional content lives in the GPU profile."
+        },
+        "AggregationService": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Enables a node/rack/pod aggregator to unify subordinate BMCs and the NVIDIA HGX controller into one event+telemetry stream (gap analysis 7.1)."
+        }
+      }
+    },
+    "EventService": {
+      "ReadRequirement": "Mandatory",
+      "Purpose": "Push eventing is the backbone of monitoring + SIEM forwarding; absent from the GPU baseline today.",
+      "PropertyRequirements": {
+        "ServiceEnabled": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Subscriptions": {
+          "ReadRequirement": "Mandatory"
+        },
+        "ServerSentEventUri": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "SSE streaming of events/metric reports."
+        },
+        "IncludeOriginOfConditionSupported": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Lets subscribers receive the faulting resource state inline with the event (DSP0266 1.22)."
+        },
+        "RegistryPrefixes": {
+          "ReadRequirement": "Recommended"
+        },
+        "ResourceTypes": {
+          "ReadRequirement": "Recommended"
+        }
+      },
+      "ActionRequirements": {
+        "SubmitTestEvent": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "EventDestination": {
+      "ReadRequirement": "IfPopulated",
+      "PropertyRequirements": {
+        "Destination": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Protocol": {
+          "ReadRequirement": "Mandatory"
+        },
+        "SubscriptionType": {
+          "ReadRequirement": "Mandatory"
+        },
+        "EventFormatType": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Allow MetricReport format for telemetry streaming."
+        },
+        "IncludeOriginOfCondition": {
+          "ReadRequirement": "Recommended"
+        },
+        "DeliveryRetryPolicy": {
+          "ReadRequirement": "Recommended"
+        },
+        "SyslogFilters": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Forward security/audit events to a SIEM via syslog."
+        }
+      }
+    },
+    "AccountService": {
+      "ReadRequirement": "Mandatory",
+      "Purpose": "RBAC + external identity + MFA for the management plane (ClusterMAX Security / RBAC-SSO).",
+      "PropertyRequirements": {
+        "Accounts": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Roles": {
+          "ReadRequirement": "Mandatory"
+        },
+        "LDAP": {
+          "ReadRequirement": "Recommended"
+        },
+        "ActiveDirectory": {
+          "ReadRequirement": "Recommended"
+        },
+        "OAuth2": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Delegated auth / SSO (DSP0266 13.4.4)."
+        },
+        "MultiFactorAuth": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "TOTP/MFA for session creation (DSP0266 13.5.5)."
+        },
+        "AccountLockoutThreshold": {
+          "ReadRequirement": "Recommended"
+        },
+        "MinPasswordLength": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "Role": {
+      "ReadRequirement": "Mandatory",
+      "PropertyRequirements": {
+        "RoleId": {
+          "ReadRequirement": "Mandatory"
+        },
+        "AssignedPrivileges": {
+          "ReadRequirement": "Mandatory"
+        },
+        "IsPredefined": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "SessionService": {
+      "ReadRequirement": "Mandatory",
+      "PropertyRequirements": {
+        "SessionTimeout": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Sessions": {
+          "ReadRequirement": "Mandatory"
+        }
+      }
+    },
+    "Session": {
+      "ReadRequirement": "Mandatory",
+      "Purpose": "Audit identity: who connected, from where, when.",
+      "PropertyRequirements": {
+        "UserName": {
+          "ReadRequirement": "Mandatory"
+        },
+        "ClientOriginIPAddress": {
+          "ReadRequirement": "Recommended"
+        },
+        "CreatedTime": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "LogService": {
+      "ReadRequirement": "Mandatory",
+      "Purpose": "Require a Security-purpose audit log capturing privileged actions with actor identity.",
+      "PropertyRequirements": {
+        "Entries": {
+          "ReadRequirement": "Mandatory"
+        },
+        "LogPurposes": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "At least one LogService with LogPurposes containing 'Security' for audit (ClusterMAX audit-log criteria)."
+        },
+        "ServiceEnabled": {
+          "ReadRequirement": "Recommended"
+        }
+      },
+      "ActionRequirements": {
+        "ClearLog": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "LogEntry": {
+      "ReadRequirement": "Mandatory",
+      "PropertyRequirements": {
+        "Created": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Severity": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Message": {
+          "ReadRequirement": "Mandatory"
+        },
+        "MessageId": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Originator": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Actor identity on privileged actions (audit)."
+        },
+        "OriginatorType": {
+          "ReadRequirement": "Recommended"
+        },
+        "OriginOfCondition": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "UpdateService": {
+      "ReadRequirement": "Mandatory",
+      "Purpose": "Modern multipart push (deprecates HttpPushUriOptions); component-targeted firmware update.",
+      "PropertyRequirements": {
+        "ServiceEnabled": {
+          "ReadRequirement": "Mandatory"
+        },
+        "FirmwareInventory": {
+          "ReadRequirement": "Mandatory"
+        },
+        "MultipartHttpPushUri": {
+          "ReadRequirement": "Mandatory",
+          "Purpose": "Component-targeted push update; preferred over deprecated HttpPushUri (open UBB issue)."
+        }
+      },
+      "ActionRequirements": {
+        "SimpleUpdate": {
+          "ReadRequirement": "Recommended",
+          "Parameters": {
+            "ImageURI": {
+              "ReadRequirement": "Mandatory"
+            },
+            "Targets": {
+              "ReadRequirement": "Recommended"
+            },
+            "TransferProtocol": {
+              "ReadRequirement": "Recommended"
+            }
+          }
+        }
+      }
+    },
+    "SecureBoot": {
+      "ReadRequirement": "Recommended",
+      "Purpose": "Neocloud-Trusted tier. Boot integrity (ClusterMAX Security; CoreWeave-Platinum cited Secure/Measured Boot).",
+      "PropertyRequirements": {
+        "SecureBootEnable": {
+          "ReadRequirement": "Recommended"
+        },
+        "SecureBootCurrentBoot": {
+          "ReadRequirement": "Recommended"
+        },
+        "SecureBootMode": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "ComponentIntegrity": {
+      "ReadRequirement": "Recommended",
+      "Purpose": "Neocloud-Trusted tier. SPDM/TPM device attestation of GPUs/NICs/baseboards (gap analysis 4.1; OCP Security WG).",
+      "PropertyRequirements": {
+        "ComponentIntegrityType": {
+          "ReadRequirement": "Recommended"
+        },
+        "ComponentIntegrityEnabled": {
+          "ReadRequirement": "Recommended"
+        },
+        "TargetComponentURI": {
+          "ReadRequirement": "Recommended"
+        },
+        "SPDM": {
+          "ReadRequirement": "Recommended"
+        }
+      },
+      "ActionRequirements": {
+        "SPDMGetSignedMeasurements": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    }
+  },
+  "Registries": {
+    "Base": {
+      "MinVersion": "1.0.0",
+      "Repository": "redfish.dmtf.org/registries",
+      "Messages": {}
+    }
+  }
+}

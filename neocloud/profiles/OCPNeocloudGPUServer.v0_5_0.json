@@ -1,0 +1,392 @@
+{
+  "SchemaDefinition": "RedfishInteroperabilityProfile.v1_6_0",
+  "ProfileName": "OCPNeocloudGPUServer",
+  "ProfileVersion": "0.5.0",
+  "Purpose": "Neocloud GPU server profile. Builds on OCPNeocloudServiceCore and the UBB GPU baseline and adds the AI-cluster RAS signals ClusterMAX weights most: GPU/HBM ECC, throttle, PCIe AER, NVLink/NVSwitch fabric health, active health Conditions, and a license-aware (conditional) telemetry contract plus an accelerator-RAS message registry for XID/SXID.",
+  "OwningEntity": "Open Compute Project",
+  "ContributedBy": "OCP Scaling AI Clusters at Neoclouds workgroup (DRAFT)",
+  "ContactInfo": "jm@farmgpu.com",
+  "RequiredProfiles": {
+    "OCPNeocloudServiceCore": {
+      "MinVersion": "0.5.0"
+    },
+    "OCP_UBB_BaselineManagement": {
+      "MinVersion": "1.0.0"
+    }
+  },
+  "Protocol": {
+    "MinVersion": "1.16"
+  },
+  "Resources": {
+    "Processor": {
+      "MinVersion": "1.16.0",
+      "ReadRequirement": "Mandatory",
+      "PropertyRequirements": {
+        "ProcessorType": {
+          "ReadRequirement": "Mandatory",
+          "Comparison": "AnyOf",
+          "Values": [
+            "GPU",
+            "Accelerator"
+          ],
+          "Purpose": "Scope GPU requirements to accelerator processors."
+        },
+        "Metrics": {
+          "ReadRequirement": "Mandatory",
+          "Purpose": "Raise from UBB-Recommended: GPU telemetry must be reachable."
+        },
+        "EnvironmentMetrics": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Ports": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Status": {
+          "ReadRequirement": "Mandatory",
+          "PropertyRequirements": {
+            "Health": {
+              "ReadRequirement": "Mandatory"
+            },
+            "State": {
+              "ReadRequirement": "Mandatory"
+            },
+            "Conditions": {
+              "ReadRequirement": "Recommended",
+              "Purpose": "Active-fault list (XID/ECC/NVLink conditions) without log scraping; gap analysis 8.4."
+            }
+          }
+        }
+      }
+    },
+    "ProcessorMetrics": {
+      "MinVersion": "1.6.0",
+      "ReadRequirement": "Mandatory",
+      "Purpose": "Absent from the UBB baseline. Carries the GPU health signals ClusterMAX requires.",
+      "PropertyRequirements": {
+        "BandwidthPercent": {
+          "ReadRequirement": "Mandatory"
+        },
+        "OperatingSpeedMHz": {
+          "ReadRequirement": "Recommended"
+        },
+        "ThrottlingCelsius": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Thermal-throttle margin."
+        },
+        "PowerLimitThrottleDuration": {
+          "ReadRequirement": "Recommended"
+        },
+        "ThermalLimitThrottleDuration": {
+          "ReadRequirement": "Recommended"
+        },
+        "CacheMetricsTotal": {
+          "ReadRequirement": "Recommended",
+          "PropertyRequirements": {
+            "LifeTime": {
+              "ReadRequirement": "Mandatory",
+              "PropertyRequirements": {
+                "CorrectableECCErrorCount": {
+                  "ReadRequirement": "Mandatory"
+                },
+                "UncorrectableECCErrorCount": {
+                  "ReadRequirement": "Mandatory"
+                }
+              }
+            }
+          }
+        },
+        "PCIeErrors": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "PCIe AER - link instability / 'GPU fell off the bus' (gap analysis 2.1).",
+          "PropertyRequirements": {
+            "CorrectableErrorCount": {
+              "ReadRequirement": "Mandatory"
+            },
+            "NonFatalErrorCount": {
+              "ReadRequirement": "Mandatory"
+            },
+            "FatalErrorCount": {
+              "ReadRequirement": "Mandatory"
+            },
+            "L0ToRecoveryCount": {
+              "ReadRequirement": "Recommended"
+            },
+            "ReplayCount": {
+              "ReadRequirement": "Recommended"
+            }
+          }
+        }
+      }
+    },
+    "MemoryMetrics": {
+      "MinVersion": "1.7.0",
+      "ReadRequirement": "Mandatory",
+      "Purpose": "UBB requires only BandwidthPercent. Mandate HBM ECC counts and health data.",
+      "PropertyRequirements": {
+        "BandwidthPercent": {
+          "ReadRequirement": "Mandatory"
+        },
+        "CurrentPeriod": {
+          "ReadRequirement": "Recommended",
+          "PropertyRequirements": {
+            "CorrectableECCErrorCount": {
+              "ReadRequirement": "Mandatory"
+            },
+            "UncorrectableECCErrorCount": {
+              "ReadRequirement": "Mandatory"
+            }
+          }
+        },
+        "LifeTime": {
+          "ReadRequirement": "Mandatory",
+          "PropertyRequirements": {
+            "CorrectableECCErrorCount": {
+              "ReadRequirement": "Mandatory"
+            },
+            "UncorrectableECCErrorCount": {
+              "ReadRequirement": "Mandatory"
+            }
+          }
+        },
+        "HealthData": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "HBM health incl. spare-block/row-remap proxies.",
+          "PropertyRequirements": {
+            "PredictedMediaLifeLeftPercent": {
+              "ReadRequirement": "Recommended"
+            },
+            "RemainingSpareBlockPercentage": {
+              "ReadRequirement": "Recommended"
+            },
+            "AlarmTrips": {
+              "ReadRequirement": "Recommended",
+              "PropertyRequirements": {
+                "CorrectableECCError": {
+                  "ReadRequirement": "Recommended"
+                },
+                "UncorrectableECCError": {
+                  "ReadRequirement": "Recommended"
+                },
+                "SpareBlock": {
+                  "ReadRequirement": "Recommended"
+                },
+                "Temperature": {
+                  "ReadRequirement": "Recommended"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Port": {
+      "MinVersion": "1.16.0",
+      "ReadRequirement": "Mandatory",
+      "PropertyRequirements": {
+        "LinkState": {
+          "ReadRequirement": "Mandatory",
+          "Purpose": "Raise from UBB-Recommended."
+        },
+        "LinkStatus": {
+          "ReadRequirement": "Mandatory",
+          "Purpose": "Raise from UBB-Recommended. NOTE: trust with care on GB200 - NVIDIA fw bug can misreport (gap analysis 8.7)."
+        },
+        "LinkTransitionIndicator": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Link-flap signal (no standard cumulative flap counter yet - gap 2.4)."
+        },
+        "CurrentSpeedGbps": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Metrics": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Status": {
+          "ReadRequirement": "Mandatory",
+          "PropertyRequirements": {
+            "Health": {
+              "ReadRequirement": "Mandatory"
+            },
+            "State": {
+              "ReadRequirement": "Mandatory"
+            },
+            "Conditions": {
+              "ReadRequirement": "Recommended"
+            }
+          }
+        }
+      }
+    },
+    "PortMetrics": {
+      "MinVersion": "1.5.0",
+      "ReadRequirement": "Mandatory",
+      "Purpose": "UBB requires only RX/TXBytes. Add error counters where available (NVLink CRC/replay are OEM today).",
+      "PropertyRequirements": {
+        "RXBytes": {
+          "ReadRequirement": "Mandatory"
+        },
+        "TXBytes": {
+          "ReadRequirement": "Mandatory"
+        },
+        "RXErrors": {
+          "ReadRequirement": "Recommended"
+        },
+        "TXErrors": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "Fabric": {
+      "MinVersion": "1.3.0",
+      "ReadRequirement": "IfImplemented",
+      "Purpose": "Single-node HGX may not expose a fabric; an NVSwitch/NVL72 fabric MUST (gap analysis 2.3/8.7). Rack-scale NVL72 NVLink is owned by NVIDIA GFM out-of-band - see README.",
+      "PropertyRequirements": {
+        "FabricType": {
+          "ReadRequirement": "Mandatory",
+          "Comparison": "AnyOf",
+          "Values": [
+            "NVLink",
+            "InfiniBand",
+            "Ethernet",
+            "PCIe"
+          ]
+        },
+        "Switches": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Status": {
+          "ReadRequirement": "Mandatory",
+          "PropertyRequirements": {
+            "Health": {
+              "ReadRequirement": "Mandatory"
+            },
+            "State": {
+              "ReadRequirement": "Mandatory"
+            },
+            "Conditions": {
+              "ReadRequirement": "Recommended"
+            }
+          }
+        }
+      }
+    },
+    "Switch": {
+      "MinVersion": "1.9.0",
+      "ReadRequirement": "IfImplemented",
+      "PropertyRequirements": {
+        "SwitchType": {
+          "ReadRequirement": "Mandatory"
+        },
+        "FirmwareVersion": {
+          "ReadRequirement": "Recommended"
+        },
+        "Ports": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Metrics": {
+          "ReadRequirement": "Recommended"
+        },
+        "Status": {
+          "ReadRequirement": "Mandatory",
+          "PropertyRequirements": {
+            "Health": {
+              "ReadRequirement": "Mandatory"
+            },
+            "State": {
+              "ReadRequirement": "Mandatory"
+            },
+            "Conditions": {
+              "ReadRequirement": "Recommended"
+            }
+          }
+        }
+      }
+    },
+    "PCIeDevice": {
+      "MinVersion": "1.0.0",
+      "ReadRequirement": "Mandatory",
+      "PropertyRequirements": {
+        "Status": {
+          "ReadRequirement": "Mandatory",
+          "Purpose": "State=Absent/UnavailableOffline is the standard 'device left the bus' signal.",
+          "PropertyRequirements": {
+            "Health": {
+              "ReadRequirement": "Mandatory"
+            },
+            "State": {
+              "ReadRequirement": "Mandatory"
+            }
+          }
+        }
+      }
+    },
+    "TelemetryService": {
+      "MinVersion": "1.3.0",
+      "ReadRequirement": "IfImplemented",
+      "Purpose": "License/platform-gated (HPE Intel-only; Dell Datacenter license; Supermicro SFT-DCMS). Do NOT hard-require streaming. IF implemented, the content below is Mandatory. NOTE: requiring UBB currently inherits its hard TelemetryService mandate - see README open issue.",
+      "PropertyRequirements": {
+        "MetricReportDefinitions": {
+          "ReadRequirement": "Mandatory"
+        },
+        "MetricReports": {
+          "ReadRequirement": "Mandatory"
+        },
+        "MinCollectionInterval": {
+          "ReadRequirement": "Mandatory"
+        },
+        "Triggers": {
+          "ReadRequirement": "Recommended",
+          "Purpose": "Threshold alerting on temp/power/ECC."
+        }
+      }
+    },
+    "MetricReportDefinition": {
+      "MinVersion": "1.4.0",
+      "ReadRequirement": "IfImplemented",
+      "PropertyRequirements": {
+        "MetricReport": {
+          "ReadRequirement": "Mandatory"
+        },
+        "MetricReportDefinitionType": {
+          "ReadRequirement": "Recommended",
+          "Comparison": "AnyOf",
+          "Values": [
+            "Periodic",
+            "OnChange",
+            "OnRequest"
+          ]
+        },
+        "Metrics": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    },
+    "Triggers": {
+      "MinVersion": "1.0.0",
+      "ReadRequirement": "IfImplemented",
+      "Purpose": "If telemetry is present, threshold triggers enable out-of-band alerting (temp/power/ECC).",
+      "PropertyRequirements": {
+        "MetricType": {
+          "ReadRequirement": "Recommended"
+        },
+        "NumericThresholds": {
+          "ReadRequirement": "Recommended"
+        }
+      }
+    }
+  },
+  "Registries": {
+    "OCPAcceleratorRAS": {
+      "MinVersion": "1.0.0",
+      "Repository": "github.com/jmhands/HWMgmt-OCP-Profiles/tree/neocloud-profiles/neocloud/registries",
+      "Messages": {
+        "GPUXidError": {},
+        "NVSwitchSxidError": {},
+        "GPURowRemappingPending": {},
+        "GPURowRemappingFailure": {},
+        "GPUFellOffBus": {},
+        "NVLinkError": {}
+      }
+    }
+  }
+}

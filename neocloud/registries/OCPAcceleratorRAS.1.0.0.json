@@ -1,0 +1,85 @@
+{
+  "@Redfish.Copyright": "Copyright 2026 Open Compute Project. Released under CC-BY-SA-4.0.",
+  "@odata.type": "#MessageRegistry.v1_6_2.MessageRegistry",
+  "Id": "OCPAcceleratorRAS.1.0.0",
+  "Name": "OCP Accelerator RAS Message Registry",
+  "Language": "en",
+  "Description": "Standardized Redfish messages for accelerator (GPU/NVSwitch) RAS events, mapping vendor error codes (NVIDIA XID/SXID; AMD equivalents) onto neutral MessageIds for use in LogEntry.MessageId and Event payloads. DRAFT stub for OCP workgroup review - the full XID/SXID code-to-MessageId mapping table is TBD and must be developed with NVIDIA/AMD.",
+  "RegistryPrefix": "OCPAcceleratorRAS",
+  "RegistryVersion": "1.0.0",
+  "OwningEntity": "Open Compute Project",
+  "Messages": {
+    "GPUXidError": {
+      "Description": "A GPU reported an NVIDIA XID error.",
+      "Message": "GPU '%1' reported XID error %2: %3.",
+      "Severity": "Critical",
+      "MessageSeverity": "Critical",
+      "NumberOfArgs": 3,
+      "ParamTypes": [
+        "string",
+        "number",
+        "string"
+      ],
+      "Resolution": "Correlate the XID code with the NVIDIA XID reference. Drain and diagnose the node; replace the GPU if the fault is persistent or uncorrectable."
+    },
+    "NVSwitchSxidError": {
+      "Description": "An NVSwitch reported an SXID error.",
+      "Message": "NVSwitch '%1' reported SXID error %2: %3.",
+      "Severity": "Critical",
+      "MessageSeverity": "Critical",
+      "NumberOfArgs": 3,
+      "ParamTypes": [
+        "string",
+        "number",
+        "string"
+      ],
+      "Resolution": "Assess NVLink fabric blast radius; drain affected GPUs and diagnose the NVSwitch."
+    },
+    "GPURowRemappingPending": {
+      "Description": "A GPU has a pending HBM row remapping that requires a reset to take effect.",
+      "Message": "GPU '%1' has a pending memory row remapping.",
+      "Severity": "Warning",
+      "MessageSeverity": "Warning",
+      "NumberOfArgs": 1,
+      "ParamTypes": [
+        "string"
+      ],
+      "Resolution": "Schedule a GPU reset during the next maintenance window to apply the remapping."
+    },
+    "GPURowRemappingFailure": {
+      "Description": "A GPU HBM row remapping operation failed.",
+      "Message": "GPU '%1' memory row remapping failed.",
+      "Severity": "Critical",
+      "MessageSeverity": "Critical",
+      "NumberOfArgs": 1,
+      "ParamTypes": [
+        "string"
+      ],
+      "Resolution": "Drain the node and replace the GPU."
+    },
+    "GPUFellOffBus": {
+      "Description": "A GPU is no longer present on the PCIe bus.",
+      "Message": "GPU '%1' is no longer responding on the PCIe bus.",
+      "Severity": "Critical",
+      "MessageSeverity": "Critical",
+      "NumberOfArgs": 1,
+      "ParamTypes": [
+        "string"
+      ],
+      "Resolution": "Drain the node; check PCIe AER counters and reseat/replace the GPU."
+    },
+    "NVLinkError": {
+      "Description": "An NVLink port reported an error or link-state change.",
+      "Message": "NVLink port '%1' on '%2' reported error condition: %3.",
+      "Severity": "Warning",
+      "MessageSeverity": "Warning",
+      "NumberOfArgs": 3,
+      "ParamTypes": [
+        "string",
+        "string",
+        "string"
+      ],
+      "Resolution": "Inspect NVLink error counters and link status; if persistent, drain and diagnose."
+    }
+  }
+}
